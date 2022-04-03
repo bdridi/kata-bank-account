@@ -1,6 +1,7 @@
 package io.shodo.domain
 
 import io.shodo.domain.model.Account
+import io.shodo.domain.model.StatementEntry
 import io.shodo.domain.model.Transaction
 import io.shodo.domain.model.TransactionType
 import org.joda.money.CurrencyUnit
@@ -38,6 +39,18 @@ class AccountService(val transactionRepositorySpi: TransactionRepositorySpi, val
             accountNumber = account.number,
             dateTime = clock.getLocalDateTime()
         ))
+    }
+
+    override fun getStatement(account: Account): List<StatementEntry> {
+        var runningBalance = Money.zero(account.currency)
+        return transactionRepositorySpi.findTransactionByAccountNumber(accountNumber = account.number)
+            .sortedBy { it.dateTime }
+            .map {
+                runningBalance = if(it.type == TransactionType.DEPOSIT)
+                    runningBalance.plus(it.amount)
+                else runningBalance.minus(it.amount)
+                StatementEntry(transactionType = it.type, dateTime = it.dateTime, amount = it.amount, balance = runningBalance)
+            }
     }
 
     private fun calculateBalance(transactions: List<Transaction>, currency: CurrencyUnit): Money {
