@@ -5,4 +5,5 @@ import org.joda.money.Money
 
 interface AccountServiceApi {
     fun deposit(account: Account, amount: Money)
+    fun withdrawal(account: Account, amount: Money)
 }

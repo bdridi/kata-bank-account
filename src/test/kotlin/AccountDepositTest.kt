@@ -21,14 +21,14 @@ class AccountDepositTest {
     private val transactionRepositorySpi: TransactionRepositorySpi = mock { }
 
     companion object{
-        private val mockTransactionDate = LocalDateTime.parse("2022-01-01T15:30")
+        private val mockTransactionDateTime = LocalDateTime.parse("2022-01-01T15:30")
         private val accountNumber = UUID.randomUUID().toString()
         private val account = Account(number = accountNumber, owner = "Chuck Norris", currency = CurrencyUnit.EUR)
     }
 
     class TestClock: Clock() {
         override fun getLocalDateTime(): LocalDateTime {
-            return mockTransactionDate
+            return mockTransactionDateTime
         }
     }
     private val accountService: AccountServiceApi = AccountService(transactionRepositorySpi = transactionRepositorySpi, clock = TestClock())
@@ -46,7 +46,7 @@ class AccountDepositTest {
 
         val expectedTransactionToCreate = Transaction(type = TransactionType.DEPOSIT,
             amount = amountToDeposit,
-            dateTime = mockTransactionDate,
+            dateTime = mockTransactionDateTime,
             accountNumber = accountNumber)
         verify(transactionRepositorySpi, times(1)).createTransaction(expectedTransactionToCreate)
     }
