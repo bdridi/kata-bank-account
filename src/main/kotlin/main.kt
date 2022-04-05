@@ -1,6 +1,5 @@
 import io.shodo.application.AccountConsole
-import io.shodo.domain.AccountService
-import io.shodo.domain.Clock
+import io.shodo.domain.*
 import io.shodo.domain.model.Account
 import io.shodo.infrastructure.InMemoryTransactionRepository
 import org.joda.money.CurrencyUnit
@@ -10,8 +9,14 @@ import java.util.*
 fun main(args: Array<String>) {
     // Config
     val transactionRepository = InMemoryTransactionRepository()
-    val accountService = AccountService(transactionRepository, Clock())
-    val accountConsole = AccountConsole(accountService)
+    val depositUseCase = DepositUseCase(transactionRepository, Clock())
+    val withdrawalUseCase = WithdrawalUseCase(transactionRepository, Clock())
+    val generateStatementUseCase = GenerateStatementUseCase(transactionRepository)
+    val accountConsole = AccountConsole(
+        depositUseCaseApi = depositUseCase,
+        withdrawalUseCaseApi = withdrawalUseCase,
+        generateStatementUseCaseApi = generateStatementUseCase
+    )
 
     // create an account
     val account = Account(number = UUID.randomUUID().toString(), owner = "Chuck Norris", currency = CurrencyUnit.EUR)

@@ -1,7 +1,4 @@
-import io.shodo.domain.AccountService
-import io.shodo.domain.AccountServiceApi
-import io.shodo.domain.Clock
-import io.shodo.domain.TransactionRepositorySpi
+import io.shodo.domain.*
 import io.shodo.domain.model.Account
 import io.shodo.domain.model.Transaction
 import io.shodo.domain.model.TransactionType
@@ -20,18 +17,19 @@ class AccountDepositTest {
 
     private val transactionRepositorySpi: TransactionRepositorySpi = mock { }
 
-    companion object{
+    companion object {
         private val mockTransactionDateTime = LocalDateTime.parse("2022-01-01T15:30")
         private val accountNumber = UUID.randomUUID().toString()
         private val account = Account(number = accountNumber, owner = "Chuck Norris", currency = CurrencyUnit.EUR)
     }
 
-    class TestClock: Clock() {
+    class TestClock : Clock() {
         override fun getLocalDateTime(): LocalDateTime {
             return mockTransactionDateTime
         }
     }
-    private val accountService: AccountServiceApi = AccountService(transactionRepositorySpi = transactionRepositorySpi, clock = TestClock())
+
+    private val depositUseCase: DepositUseCaseApi = DepositUseCase(transactionRepositorySpi = transactionRepositorySpi, clock = TestClock())
 
 
     @Test
@@ -40,7 +38,7 @@ class AccountDepositTest {
         val amountToDeposit = Money.parse("EUR 1000")
         // WHEN
 
-        accountService.deposit(account = account, amount = amountToDeposit)
+        depositUseCase.deposit(account = account, amount = amountToDeposit)
 
         // THEN
 
@@ -56,7 +54,7 @@ class AccountDepositTest {
         // GIVEN
         val amountToDeposit = Money.parse("EUR 1000").negated()
         // WHEN // THEN
-        assertThrows<IllegalArgumentException> { accountService.deposit(account = account, amount = amountToDeposit) }
+        assertThrows<IllegalArgumentException> { depositUseCase.deposit(account = account, amount = amountToDeposit) }
         verifyNoMoreInteractions(transactionRepositorySpi)
     }
 
@@ -65,7 +63,7 @@ class AccountDepositTest {
         // GIVEN
         val amountToDeposit = Money.zero(CurrencyUnit.EUR)
         // WHEN // THEN
-        assertThrows<IllegalArgumentException> { accountService.deposit(account = account, amount = amountToDeposit) }
+        assertThrows<IllegalArgumentException> { depositUseCase.deposit(account = account, amount = amountToDeposit) }
         verifyNoMoreInteractions(transactionRepositorySpi)
     }
 
@@ -74,7 +72,7 @@ class AccountDepositTest {
         // GIVEN
         val amountToDeposit = Money.parse("USD 100")
         // WHEN // THEN
-        assertThrows<IllegalArgumentException> { accountService.deposit(account = account, amount = amountToDeposit) }
+        assertThrows<IllegalArgumentException> { depositUseCase.deposit(account = account, amount = amountToDeposit) }
         verifyNoMoreInteractions(transactionRepositorySpi)
     }
 }

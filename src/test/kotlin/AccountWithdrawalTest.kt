@@ -1,7 +1,4 @@
-import io.shodo.domain.AccountService
-import io.shodo.domain.AccountServiceApi
-import io.shodo.domain.Clock
-import io.shodo.domain.TransactionRepositorySpi
+import io.shodo.domain.*
 import io.shodo.domain.model.Account
 import io.shodo.domain.model.Transaction
 import io.shodo.domain.model.TransactionType
@@ -30,8 +27,8 @@ class AccountWithdrawalTest {
         }
     }
 
-    private val accountService: AccountServiceApi =
-        AccountService(transactionRepositorySpi = transactionRepositorySpi, clock = TestClock())
+    private val withdrawalUseCaseApi: WithdrawalUseCaseApi =
+        WithdrawalUseCase(transactionRepositorySpi = transactionRepositorySpi, clock = TestClock())
 
 
     @Test
@@ -52,7 +49,7 @@ class AccountWithdrawalTest {
             ))
         // WHEN
 
-        accountService.withdrawal(account = account, amount = amountToWithdrawal)
+        withdrawalUseCaseApi.withdrawal(account = account, amount = amountToWithdrawal)
 
         // THEN
 
@@ -76,7 +73,7 @@ class AccountWithdrawalTest {
             ))
         // WHEN
 
-        accountService.withdrawal(account = account, amount = amountToWithdrawal)
+        withdrawalUseCaseApi.withdrawal(account = account, amount = amountToWithdrawal)
 
         // THEN
 
@@ -99,7 +96,7 @@ class AccountWithdrawalTest {
             )))
         // WHEN // THEN
         assertThrows<UnsupportedOperationException> {
-            accountService.withdrawal(account = account,
+            withdrawalUseCaseApi.withdrawal(account = account,
                 amount = amountToWithdrawal)
         }
         verify(transactionRepositorySpi, times(1)).findTransactionByAccountNumber(accountNumber)
@@ -112,7 +109,7 @@ class AccountWithdrawalTest {
         val amountToWithdrawal = Money.zero(CurrencyUnit.EUR)
         // WHEN // THEN
         assertThrows<IllegalArgumentException> {
-            accountService.withdrawal(account = account, amount = amountToWithdrawal)
+            withdrawalUseCaseApi.withdrawal(account = account, amount = amountToWithdrawal)
         }
         verifyNoMoreInteractions(transactionRepositorySpi)
     }
@@ -124,7 +121,7 @@ class AccountWithdrawalTest {
         val amountToDeposit = Money.parse("USD 100")
         // WHEN // THEN
         assertThrows<IllegalArgumentException> {
-            accountService.withdrawal(account = account, amount = amountToDeposit)
+            withdrawalUseCaseApi.withdrawal(account = account, amount = amountToDeposit)
         }
         verifyNoMoreInteractions(transactionRepositorySpi)
     }
@@ -136,7 +133,7 @@ class AccountWithdrawalTest {
         // WHEN // THEN
 
         assertThrows<IllegalArgumentException> {
-            accountService.withdrawal(account = account,
+            withdrawalUseCaseApi.withdrawal(account = account,
                 amount = amountToDeposit)
         }
         verifyNoMoreInteractions(transactionRepositorySpi)

@@ -1,8 +1,5 @@
 import io.shodo.application.AccountConsole
-import io.shodo.domain.AccountService
-import io.shodo.domain.AccountServiceApi
-import io.shodo.domain.Clock
-import io.shodo.domain.TransactionRepositorySpi
+import io.shodo.domain.*
 import io.shodo.domain.model.Account
 import io.shodo.domain.model.StatementEntry
 import io.shodo.domain.model.TransactionType
@@ -20,15 +17,18 @@ class AccountStatementPrinterTest {
     companion object {
         private val accountNumber = UUID.randomUUID().toString()
         private val account = Account(number = accountNumber, owner = "Chuck Norris", currency = CurrencyUnit.EUR)
-        private val mockTransactionDateTime = LocalDateTime.parse("2022-01-01T15:30")
     }
 
-    private val accountServiceApi: AccountServiceApi = mock {  }
-    private val accountConsole = AccountConsole(accountServiceApi)
+    private val generateStatementUseCaseApi: GenerateStatementUseCaseApi = mock {  }
+    private val depositUseCaseApi: DepositUseCaseApi = mock { }
+    private val withdrawalUseCaseApi: WithdrawalUseCaseApi = mock {  }
+    private val accountConsole = AccountConsole(
+        depositUseCaseApi, withdrawalUseCaseApi, generateStatementUseCaseApi
+    )
 
     @Test
     internal fun `print statement of an empty account should return ony headers`() {
-        given(accountServiceApi.getStatement(account)).willReturn(listOf())
+        given(generateStatementUseCaseApi.getStatement(account)).willReturn(listOf())
         val statement = accountConsole.printStatement(account)
         assertThat(statement).isEqualTo("""
             transaction | date | amount | balance
@@ -57,7 +57,7 @@ class AccountStatementPrinterTest {
                 amount = Money.parse("EUR 150"),
                 balance = Money.parse("EUR 350"))
         )
-        given(accountServiceApi.getStatement(account)).willReturn(statementLines)
+        given(generateStatementUseCaseApi.getStatement(account)).willReturn(statementLines)
         val statement = accountConsole.printStatement(account)
         assertThat(statement).isEqualTo("""
             transaction | date | amount | balance

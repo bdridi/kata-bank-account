@@ -1,7 +1,6 @@
 package io.shodo.domain
 
 import io.shodo.domain.model.Account
-import io.shodo.domain.model.StatementEntry
 import io.shodo.domain.model.Transaction
 import io.shodo.domain.model.TransactionType
 import org.joda.money.CurrencyUnit
@@ -9,20 +8,10 @@ import org.joda.money.Money
 import java.lang.IllegalArgumentException
 import java.lang.UnsupportedOperationException
 
-class AccountService(val transactionRepositorySpi: TransactionRepositorySpi, val clock: Clock) : AccountServiceApi {
-    override fun deposit(account: Account, amount: Money) {
-        if(amount.isNegativeOrZero)
-            throw IllegalArgumentException("cannot deposit a negative or zero amount")
-        if(account.currency != amount.currencyUnit)
-            throw IllegalArgumentException("cannot deposit an amount in different account currency")
-
-        transactionRepositorySpi.createTransaction(Transaction(
-            type = TransactionType.DEPOSIT,
-            amount = amount,
-            accountNumber = account.number,
-            dateTime = clock.getLocalDateTime()
-        ))
-    }
+class WithdrawalUseCase(
+    private val transactionRepositorySpi: TransactionRepositorySpi,
+    private val clock: Clock
+): WithdrawalUseCaseApi {
 
     override fun withdrawal(account: Account, amount: Money) {
         if(amount.isNegativeOrZero)
@@ -39,18 +28,6 @@ class AccountService(val transactionRepositorySpi: TransactionRepositorySpi, val
             accountNumber = account.number,
             dateTime = clock.getLocalDateTime()
         ))
-    }
-
-    override fun getStatement(account: Account): List<StatementEntry> {
-        var runningBalance = Money.zero(account.currency)
-        return transactionRepositorySpi.findTransactionByAccountNumber(accountNumber = account.number)
-            .sortedBy { it.dateTime }
-            .map {
-                runningBalance = if(it.type == TransactionType.DEPOSIT)
-                    runningBalance.plus(it.amount)
-                else runningBalance.minus(it.amount)
-                StatementEntry(transactionType = it.type, dateTime = it.dateTime, amount = it.amount, balance = runningBalance)
-            }
     }
 
     private fun calculateBalance(transactions: List<Transaction>, currency: CurrencyUnit): Money {

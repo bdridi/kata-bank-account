@@ -1,7 +1,4 @@
-import io.shodo.domain.AccountService
-import io.shodo.domain.AccountServiceApi
-import io.shodo.domain.Clock
-import io.shodo.domain.TransactionRepositorySpi
+import io.shodo.domain.*
 import io.shodo.domain.model.Account
 import io.shodo.domain.model.StatementEntry
 import io.shodo.domain.model.Transaction
@@ -31,15 +28,15 @@ class AccountStatementTest {
         }
     }
 
-    private val accountService: AccountServiceApi =
-        AccountService(transactionRepositorySpi = transactionRepositorySpi, clock = TestClock())
+    private val generateStatementUseCaseApi: GenerateStatementUseCaseApi =
+        GenerateStatementUseCase(transactionRepositorySpi = transactionRepositorySpi)
 
     @Test
     internal fun `account statement of empty account should return empty `() {
         // GIVEN
         given(transactionRepositorySpi.findTransactionByAccountNumber(accountNumber)).willReturn(listOf())
         // WHEN
-        val statement = accountService.getStatement(account)
+        val statement = generateStatementUseCaseApi.getStatement(account)
 
         // THEN
         assertThat(statement.size).isEqualTo(0)
@@ -69,10 +66,10 @@ class AccountStatementTest {
                 )
             ))
         // WHEN
-        val statement = accountService.getStatement(account)
+        val statement = generateStatementUseCaseApi.getStatement(account)
 
         // THEN
-        val expectedStatement = listOf<StatementEntry>(
+        val expectedStatement = listOf(
             StatementEntry(transactionType = TransactionType.DEPOSIT,
                 dateTime = dateTimeFirstTransaction,
                 amount = Money.parse("EUR 500"),
